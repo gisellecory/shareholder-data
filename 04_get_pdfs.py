@@ -1,4 +1,4 @@
-# python3 02_get_pdfs/05_download_pdfs.py
+# python3 C_get_pdfs/05_download_pdfs.py
 
 # # # # # #
 #  Main API call
@@ -18,23 +18,23 @@ route_dir = "/Users/gisellecory/git/repo_shareholder_data"
 sys.path.insert(0, route_dir)
 import local
 
-destination_route_directory = local.filepath_pdf_directory
-
 # Create log_filename CSV if it doesn't exist
 if os.path.isfile(local.log_filepath/local.log_filename) == False:
     with open(local.log_filepath/local.log_filename, 'w'):
         pass
 
 metadata_master = pd.read_csv(local.meta_master, low_memory=False)
-metadata_master = metadata_master[metadata_master['doc_url'] != "none found/content"]
 
+# Create working version
 meta_working = metadata_master.copy()
-# Selected rows only - items not yet downloaded
-meta_working = meta_working.loc[(meta_working['downloaded'] == 0)]
-# df.loc[(df['column_name'] == some_value)
 
-# Selected columns only
+# Keep selected rows only - items not yet downloaded
+meta_working = meta_working.loc[(meta_working['downloaded'] == 0)]
+
+# Keep selected columns only
 # metadata_master = metadata_master[['category', 'co_numb', 'doc_url', 'date','downloaded']]
+
+# Sort values
 meta_working.sort_values(by=['co_numb'], inplace=True)
 meta_working = meta_working.reset_index(drop=True)
 
@@ -107,7 +107,7 @@ while instance < 7000 :
 
         # Get folder for PDF
         _dir_name = pdf_name[0:3]
-        _destination_dir = destination_route_directory/_dir_name
+        _destination_dir = str(local.pdf_route_dir) +str(_dir_name)
 
         # Populate PDF
         with open(str(_destination_dir) +"/" + pdf_name,'wb') as f:
@@ -118,17 +118,10 @@ while instance < 7000 :
 
         # Change downloaded marker to 1
         metadata_master["downloaded"][metadata_master['doc_url'].str.match(meta_working.at[j,'doc_url'])] = 1
+        print(metadata_master.groupby(['downloaded']).size())
 
-    # print("downloaded_urls_list has length: " + str(len(downloaded_urls_list)))
-    # Convert list to pandas DataFrame
-    # downloaded_urls_df = pd.DataFrame(downloaded_urls_list)
-    # print("Downloaded URLs added to DF")
-    # Append to existing output
-    # downloaded_urls_df.to_csv(local.filepath_pdf_api/local.pdfs_downloaded_filename, index=False, mode='a')
-    # print("Downloaded URLs DF added to CSV: " + str(local.filepath_pdf_api/local.pdfs_downloaded_filename))
-
-    # Save co_numbs to file (so capture which ones downloaded in case it falls over )
-    metadata_master.to_csv(local.meta_master)
+    # Save co_numbs to file (so capture which ones downloaded)
+    metadata_master.to_csv(local.meta_master, index=False)
     print("Updated metadata_master CSV")
 
     instance += 1

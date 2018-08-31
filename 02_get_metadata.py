@@ -1,4 +1,4 @@
-# python3 01_get_metadata/03_get_doc_metadata.py
+# python3 B_get_metadata/03_get_doc_metadata.py
 # # # # # #
 #  Get document IDs using CH document API
 # # # # # #
@@ -6,6 +6,8 @@
 import warnings
 warnings.filterwarnings("ignore")
 import pandas as pd
+import numpy as np
+
 import os.path
 import requests
 from pprint import pprint as print
@@ -23,13 +25,13 @@ import local
 
 # For timing
 startTime = datetime.datetime.now()
-print(startTime)
+# print(startTime)
 # print(datetime.time(datetime.now()))
 
 today = datetime.date.today()
-print(today)
+# print(today)
 
-metadata_output_file = str(meta_route_file) + str(today) + ".csv"
+metadata_output_file = str(local.meta_route_file) + str(today) + ".csv"
 print(metadata_output_file)
 
 # Create output CSV if it doesn't exist
@@ -42,10 +44,11 @@ if os.path.isfile(local.log_filepath/local.log_filename) == False:
     with open(local.log_filepath/local.log_filename, 'w'):
         pass
 
+co_numbs_file = "/Users/gisellecory/Documents/dissertation_store/01_input_CH_data/co_numbs.csv"
+
 print("Loading in company numbers")
 # Get co_numbs file
-co_numbs = pd.read_csv(local.co_numbs_fp/local.co_numbs_all_fn, low_memory=False)
-
+co_numbs = pd.read_csv(co_numbs_file, dtype={'co_numb': object, 'subset': np.int32, 'metadata': np.int32}, low_memory=False)
 print(co_numbs.shape)
 print(co_numbs.head())
 print(list(co_numbs))
@@ -80,17 +83,19 @@ while instance < 7000:
         # Take into account API rate limiting - wait 5 mins
         print("Sleeping zzzzzzzz for " + str(round(sleep_duration,0)) + " seconds")
         time.sleep(sleep_duration)
-    start_time = time.time()
+    instance_start_time = time.time()
     # print("Start time is " + str(start_time))
     # loop for conumpany numbers index i to i + 600
     for j in range(rate_limit * (instance - 1), rate_limit * instance):
         # Set up and make call to document API
 
         # Create link, e.g.  https://api.companieshouse.gov.uk/company/{company_number}/filing-history
-        query_url = gvChApi + "/" + \
-            co_numbs_list[j] + "/filing-history?items_per_page=100&category=annual-return%2Cconfirmation-statement"
+        query_url = str(gvChApi) + "/" + str(co_numbs_list[j]) + "/filing-history?items_per_page=100&category=annual-return%2Cconfirmation-statement"
 
         print("Calling API instance #" + str(j))
+        start_time_individual = time.time()
+        start_time_to_display = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print("Started at: " + str(start_time_to_display))
 
         #  Create request
         try:
@@ -210,10 +215,14 @@ while instance < 7000:
             # Add dict to dict_list
             dict_list.append(dict)
 
-            # Change metadata marker to 1
-            co_numbs["metadata"][co_numbs['co_numb'].str.match(co_numbs_list[j])] = 1
+        # Change metadata marker to 1
+        co_numbs["metadata"][co_numbs['co_numb'].str.match(str(co_numbs_list[j]))] = 1
+        print(co_numbs.groupby(['metadata']).size())
 
         print("Finished collecting info for " + co_numbs_list[j])
+        end_time_individual = time.time()
+        individual_duration = end_time_individual - start_time_individual
+        print("Individual duration is " + str(round(individual_duration,0)))
 
     print("Converting new data from list to dataframe")
     # Convert list of dictionarties to pandas DataFrame
@@ -227,13 +236,13 @@ while instance < 7000:
     output_df.to_csv(metadata_output_file, index=False, mode='a')
 
     # Save co_numbs to file (so capture which ones downloaded in case it falls over )
-    co_numbs.to_csv(local.co_numbs_fp/local.co_numbs_all_fn)
-    print("Updated co_numbs CSV")
+    co_numbs.to_csv(co_numbs_file, index=False)
+    print("Updated co_numbs CSV (of length" + str(len(co_numbs)) + ")")
 
     instance += 1
-    end_time = time.time()
-    # print("End time is " + str(end_time))
-    instance_duration = end_time - start_time
+    instance_end_time = time.time()
+    instance_duration = instance_end_time - instance_start_time
+    print("Instance duration is " + str(round(instance_duration,0)))
 
 print("API calls finished")
 

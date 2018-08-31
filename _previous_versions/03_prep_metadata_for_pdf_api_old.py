@@ -1,4 +1,4 @@
-# python3 02_get_pdfs/04_prep_metadata_for_pdf_api.py
+# python3 02_get_pdfs/03_prep_metadata_for_pdf_api.py
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,7 +16,7 @@ sys.path.insert(0, route_dir)
 import local
 
 # File paths
-source_files = os.listdir(local.local.source_meta_dir)
+source_files = os.listdir(local.source_meta_dir)
 
 # Count number of unsorted CSVs
 counter = len(glob.glob1(local.source_meta_dir,"*.csv"))
@@ -33,6 +33,7 @@ for _filename in source_files:
         print("File found: " + str(_filename))
         # Open
         temp_df = pd.read_csv(str(local.source_meta_dir)+"/"+str(_filename), low_memory=False)
+
         print("File of length: " + str(len(temp_df)))
 
         # Do some basic cleansing

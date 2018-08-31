@@ -13,7 +13,7 @@ co_numbs_fp = Path("/Users/gisellecory/Documents/dissertation_store/01_input_CH_
 co_numbs_all_fn = "co_numbs.csv"
 
 # Metadata output (route)
-meta_route_file = "/Users/gisellecory/Documents/dissertation_store/metadata/original_output/metadata_"
+meta_route_file = "/Users/gisellecory/Documents/dissertation_store/metadata/original_output_to_merge/metadata_"
 
 # Master metadata
 meta_master = "/Users/gisellecory/Documents/dissertation_store/metadata/metadata_combined.csv"
@@ -30,10 +30,10 @@ log_filename = "error_log.csv"
 
 # FOLDERS
 # Metadata outputs - source folder
-source_meta_dir = Path("/Users/gisellecory/Documents/dissertation_store/metadata/original_output/")
+source_meta_dir = Path("/Users/gisellecory/Documents/dissertation_store/metadata/original_output_to_merge/")
 
 # Metadata outputs - destination folder
-dest_meta_dir = Path("/Users/gisellecory/Documents/dissertation_store/metadata/checked_for_urls/")
+dest_meta_dir = Path("/Users/gisellecory/Documents/dissertation_store/metadata/original_output_that_has_been_merged/")
 
 # PDF route directory
 pdf_route_dir = "/Users/gisellecory/Documents/dissertation_store/pdf_route_directory/"

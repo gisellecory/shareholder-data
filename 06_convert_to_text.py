@@ -1,4 +1,4 @@
-# python3 03_convert_to_text/06_convert_pdfs_to_text.py
+# python3 D_convert_to_text/06_convert_pdfs_to_text.py
 
 # (2) Convert PDFs to text data
 
@@ -107,6 +107,9 @@ while instance <10000 :
     for j in range(instance_limit*(instance-1),instance_limit*instance):
         print("Index: " + str(j))
         start_time_individual = time.time()
+        time_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print("Started at: " + str(time_now))
+
         # Construct filepath and filename
         print(str(metadata_master.at[j,'doc_url']))
         print(str(metadata_master.at[j,'co_numb']))
@@ -127,7 +130,12 @@ while instance <10000 :
         req_image = []
         final_text = []
 
-        image_pdf = Image(filename=_file, resolution=300)
+        try:
+            image_pdf = Image(filename=_file, resolution=300)
+        except Exception as e:
+            error_flag = True
+            continue
+
         image_jpeg = image_pdf.convert('jpeg')
 
         for img in image_jpeg.sequence:
@@ -143,6 +151,7 @@ while instance <10000 :
             )
             except OSError as e:
                 error_flag = True
+                print("Error")
                 continue
 
             final_text.append(txt)
