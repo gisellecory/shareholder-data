@@ -77,3 +77,8 @@ print(len(temp_df))
 
 # Save new CSV
 # temp_df.to_csv(all_docapi_output_filename, index=False)
+
+
+
+# Checks that a sample co_numb from new output is not also in the previous output
+# print(temp.loc[temp['co_numb'] == "00074616"])
