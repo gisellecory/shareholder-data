@@ -1,36 +1,38 @@
-# python3 B_get_metadata/03_get_doc_metadata.py
+# This is module 2 of 6
+# This module reads in the master list of company numbers created in module 1 and requests metadata from the Companies House API for those for which metadata has not yet been gathered
+# Created by Giselle Cory, 2018
+
 # # # # # #
-#  Get document IDs using CH document API
+# # # # # #
+# # # # # #
+# Module 2: Get document IDs using Companies House API
+# # # # # #
+# # # # # #
 # # # # # #
 
-import warnings
-warnings.filterwarnings("ignore")
 import pandas as pd
 import numpy as np
-
 import os.path
 import requests
 from pprint import pprint as print
 from IPython.display import JSON
-# from datetime
 import datetime
 import time
 import json
-from pathlib import Path
-
-import sys
-route_dir = "/Users/gisellecory/git/repo_shareholder_data"
-sys.path.insert(0, route_dir)
 import local_filepaths as fp
 
 # For timing
 startTime = datetime.datetime.now()
-# print(startTime)
-# print(datetime.time(datetime.now()))
 
+# Route for input to this module
+co_numbs_file = fp.co_numbs_fp/fp.co_numbs_all_fn
+
+# # # # # #
+# Create filenames, files, and logs if needed
+# # # # # #
+
+# Create filename for current run of the module
 today = datetime.date.today()
-# print(today)
-
 metadata_output_file = str(fp.meta_route_file) + str(today) + ".csv"
 print(metadata_output_file)
 
@@ -44,11 +46,15 @@ if os.path.isfile(fp.log_filepath/fp.log_filename) == False:
     with open(fp.log_filepath/fp.log_filename, 'w'):
         pass
 
-co_numbs_file = "/Users/gisellecory/Documents/dissertation_store/01_input_CH_data/co_numbs.csv"
+# # # # # #
+# Read in data from CSV
+# # # # # #
 
+# Read in input CSV
 print("Loading in company numbers")
-# Get co_numbs file
 co_numbs = pd.read_csv(co_numbs_file, dtype={'co_numb': object, 'subset': np.int32, 'metadata': np.int32}, low_memory=False)
+
+# Assess data
 print(co_numbs.shape)
 print(co_numbs.head())
 print(list(co_numbs))
@@ -58,96 +64,112 @@ print(len(co_numbs))
 co_numbs.sort_values(by=['co_numb'], inplace=True)
 co_numbs = co_numbs.reset_index(drop=True)
 
-# Make into a list ONLY IF IN SUBSET AND DO NOT YET HAVE METADATA
-print("Converting to list for those in subset without metadata already")
+# # # # # #
+# Create list for use in API call
+# # # # # #
+
+# Take company numbers that are both in the subset and for which metadata has not yet been collected
+# Make into a list
+print("Converting to list for those in subset without metadata")
 co_numbs_list = co_numbs[(co_numbs['subset'] == 1) & (co_numbs['metadata'] == 0)]
-print(len(co_numbs_list))
 co_numbs_list = co_numbs_list['co_numb'].tolist()
+
+# Order by company number (again - as action of converting to list can be distruptive)
 co_numbs_list.sort()
 
+# Check on size of list
+print(len(co_numbs_list))
+
+def ErrorLog(e,j):
+    print("ERROR: " + str(e))
+    log_list = []
+    log_dict = {}
+    log_dict['api_type'] = "metadata"
+    log_dict['_error_message'] = str(e)
+    log_dict['_co_numb'] = co_numbs_list[j]
+    log_dict['_time'] = str(datetime.datetime.now())
+    log_list.append(log_dict)
+    log_df = pd.DataFrame(log_list)
+    log_df.to_csv(fp.log_filepath/fp.log_filename, index=False, mode='a')
+
+# # # # # #
+# Set up API call
+# # # # # #
+
 # Set global variables for API call
-key = 'Basic dW9IWEViUzVhQUxIU3FyWTFxZ0YtMWxHRkVzU3VmenpvaGpDMDIwQg=='
+key = ENTER-API-KEY-HERE
 gvChApi = "https://api.companieshouse.gov.uk/company"
+rate_limit = 600
 
 # Set header
 query_headers = {'Authorization': key}
 
 instance = 1
-rate_limit = 600
 
+# Set a safeguard to ensure programme terminates
 while instance < 7000:
+
+    # Create empty list. This will be used to placed the API results into, as dictionaries
     dict_list = []
+
+    # If this is not the first instance, calculate time needed for pause so that rate limit is not exeeded
     if instance != 1:
-        # 301 instead of 300 just in case, and max to deal with negative times
+        # Take the max to ensure no sleep negative durations
         sleep_duration = max(0, 301 - instance_duration)
-        # Take into account API rate limiting - wait 5 mins
-        print("Sleeping zzzzzzzz for " + str(round(sleep_duration,0)) + " seconds")
+        print("Sleeping zZzZ for " + str(round(sleep_duration,0)) + " seconds")
+        # Sleep until 5 min period has ended
         time.sleep(sleep_duration)
+
+    # Begin new instance
     instance_start_time = time.time()
-    # print("Start time is " + str(start_time))
-    # loop for conumpany numbers index i to i + 600
+    # This instance will loop over conumpany numbers i to i + 600
     for j in range(rate_limit * (instance - 1), rate_limit * instance):
+
         # Set up and make call to document API
 
-        # Create link, e.g.  https://api.companieshouse.gov.uk/company/{company_number}/filing-history
+        # Create link for API query
+        # Format: https://api.companieshouse.gov.uk/company/{company_number}/filing-history
         query_url = str(gvChApi) + "/" + str(co_numbs_list[j]) + "/filing-history?items_per_page=100&category=annual-return%2Cconfirmation-statement"
 
-        print("Calling API instance #" + str(j))
+        # Capture the time
         start_time_individual = time.time()
         start_time_to_display = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        print("Calling API instance #" + str(j))
         print("Started at: " + str(start_time_to_display))
 
-        #  Create request
+        # # # # # #
+        # Call API
+        # # # # # #
+
+        #  Send request to API
         try:
             res = requests.get(query_url, headers=query_headers)
         except requests.exceptions.ConnectionError as e:
-            print("ERROR: " + str(e))
-
-            log_list = []
-            log_dict = {}
-            log_dict['api_type'] = "metadata"
-            log_dict['_error_message'] = str(e)
-            log_dict['_co_numb'] = co_numbs_list[j]
-            log_dict['_time'] = str(datetime.datetime.now())
-            log_list.append(log_dict)
-            log_df = pd.DataFrame(log_list)
-            log_df.to_csv(fp.log_filepath/fp.log_filename, index=False, mode='a')
+             ErrorLog(e,j)
             continue
-
-        #  Send request
         try:
             res.raise_for_status()
         except requests.exceptions.RequestException as e:
-            print("ERROR: " + str(e))
-
-            log_list = []
-            # _error_message = str(e)
-            # _co_numb = co_numbers[j]
-            # _time = str(datetime.now())
-            # log_list = [_error_message,_co_numb,_time]
-            log_dict = {}
-            log_dict['api_type'] = "metadata"
-            log_dict['_error_message'] = str(e)
-            log_dict['_co_numb'] = co_numbs_list[j]
-            log_dict['_time'] = str(datetime.datetime.now())
-            log_list.append(log_dict)
-            log_df = pd.DataFrame(log_list)
-            log_df.to_csv(fp.log_filepath/fp.log_filename, index=False, mode='a')
+            ErrorLog(e,j)
             continue
 
-        json_output = res.json() # print(json_output['total_count'])
+        # # # # # #
+        # Capture returned data
+        # # # # # #
 
-        # If success (data present)
+        json_output = res.json()
+
+        # If data present, create a list of dictionaries (one per isntance)
         if (json_output['total_count'] != 0) and (json_output['total_count'] != "0"):
-            # create a list of dictionaries (one per isntance)
             for i in range(len(json_output['items'])):
                 if (json_output['items'][i]['description']) != "legacy":
                     dict = {}
 
-                    # Number of items returned (should be the same for each item returned for a given company number)
+                    # Count of items returned
                     dict['count_items'] = len(json_output['items'])
 
-                    # Whole text
+                    # Complete nested JSON element
                     dict['json'] = json.dumps(json_output['items'][i])
 
                     # Company number
@@ -181,13 +203,13 @@ while instance < 7000:
                     try:
                         dict['url'] = (json_output['items'][i]['links']['document_metadata'])
                     except KeyError:
-                        dict['url'] = "none found"
+                        dict['url'] = ""
 
                     # Page count of document
                     try:
                         dict['page_count'] = (json_output['items'][i]['pages'])
                     except KeyError:
-                        dict['page_count'] = "none found"
+                        dict['page_count'] = ""
 
                     # Whether paper filing
                     try:
@@ -195,10 +217,9 @@ while instance < 7000:
                     except KeyError:
                         dict['paper_filed'] = ""
 
-                    # Add dict to dict_list
                     dict_list.append(dict)
 
-        # If no success
+        # If no data returned, create mostly empty dictionary:
         elif json_output['total_count'] == 0:
             dict = {}
             dict['count_items'] = 0
@@ -212,32 +233,44 @@ while instance < 7000:
             dict['page_count'] = ""
             dict['paper_filed'] = ""
 
-            # Add dict to dict_list
             dict_list.append(dict)
+
+        # # # # # #
+        # Update metadata marker
+        # # # # # #
 
         # Change metadata marker to 1
         co_numbs["metadata"][co_numbs['co_numb'].str.match(str(co_numbs_list[j]))] = 1
         print(co_numbs.groupby(['metadata']).size())
+
+        # # # # # #
+        # Note timing
+        # # # # # #
 
         print("Finished collecting info for " + co_numbs_list[j])
         end_time_individual = time.time()
         individual_duration = end_time_individual - start_time_individual
         print("Individual duration is " + str(round(individual_duration,0)))
 
-    print("Converting new data from list to dataframe")
-    # Convert list of dictionarties to pandas DataFrame
-    output_df = pd.DataFrame(dict_list)
+    # # # # # #
+    # Save to file
+    # # # # # #
 
-    # Reset indices
-    # output_df = output_df.reset_index(drop=True)
+    # Convert list of dictionarties to pandas DataFrame
+    print("Converting new data from list to dataframe")
+    output_df = pd.DataFrame(dict_list)
 
     print("Appending new data to CSV: " + str(metadata_output_file))
     # Append to existing output
     output_df.to_csv(metadata_output_file, index=False, mode='a')
 
-    # Save co_numbs to file (so capture which ones downloaded in case it falls over )
+    # Save co_numbs to file (to capture updated metadata markers)
     co_numbs.to_csv(co_numbs_file, index=False)
-    print("Updated co_numbs CSV (of length" + str(len(co_numbs)) + ")")
+    print("Updated co_numbs CSV (of length: " + str(len(co_numbs)) + ")")
+
+    # # # # # #
+    # Note timing
+    # # # # # #
 
     instance += 1
     instance_end_time = time.time()
@@ -245,7 +278,3 @@ while instance < 7000:
     print("Instance duration is " + str(round(instance_duration,0)))
 
 print("API calls finished")
-
-# Note timing
-duration = datetime.now() - startTime
-print(round(duration,0))
