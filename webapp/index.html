@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company search</title>
+  <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/app.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <div class="nav_item">
+      <a href="index.html"><img id="icon" src="imagelib/icon.png" alt="Icon"></a>
+    </div>
+
+    <div class="nav_item">
+      <a href="about.html">About us</a>
+    </div>
+  </header>
+
+  <div class="container_master">
+
+    <h1>Are they a shareholder?</h1>
+    <br>
+
+    <!-- Input -->
+
+    <div id="search_input_area">
+
+      <!-- Search box -->
+      <input type="text" id="search_term" value="" placeholder="Enter a name" label="Search box">
+
+      <!-- Search button -->
+      <input type="button" id="search_button" value=" Search " label="Search button">
+
+    </div>
+
+    <!-- Empty search term alert -->
+    <p id="alert_searchterm_empty"></p>
+
+    <!-- Radio buttons -->
+    <!-- <div id="radio">
+      <label id="filter_by">&nbsp;&nbsp;&nbsp;Company type:</label>
+      <div><input type="radio" id="Choice_all" name="contact" value="all" label="All companies" checked><label for="Choice_all">All</label></div>
+
+      <div><input type="radio" id="Choice_np" name="contact" value="np" label="Non-profit companies"><label for="Choice_np">Nonprofit</label></div>
+
+      <div><input type="radio" id="Choice_p" name="contact" value="p"><label for="Choice_p" label="For-profit companies">For profit</label></div>
+    </div>
+    <br><br> -->
+
+    <!-- Output -->
+
+    <!-- Search results summary -->
+    <div id="search_summary"></div>
+
+    <!-- Results grid -->
+    <div id="container_search_results"></div>
+    <!-- <br> -->
+
+    <!-- Help box -->
+    <div id="help_box">
+      <p><a href="about.html"><strong>Need help?</strong></a> Find out more about KnowBetter, what company data is available and how to contact us</p>
+    </div>
+    <br><br>
+    <br><br>
+    <br><br>
+  </div>
+  <!-- Master container ends -->
+
+  <!-- Footer: copyright notice and social media icons -->
+
+  <footer>
+    <p class="copyright_notice">This site is published under a <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">Creative Commons</a> license.</p>
+
+    <!-- Social media -->
+    <div class="container_social">
+      <a href="https://www.facebook.com/" target="_blank">
+                <img src="imagelib/facebook.png" alt="Facebook icon" class="social_img"></a>
+      <a href="mailto:example@email.com" target="_blank">
+                  <img src="imagelib/email.png" alt="Email icon" class="social_img"></a>
+      <a href="https://twitter.com/" target="_blank">
+                    <img src="imagelib/twitter.png" alt="Twitter icon" class="social_img"></a>
+      <a href="https://www.instagram.com/" target="_blank">
+                      <img src="imagelib/instagram.png" alt="Instagram icon" class="social_img"></a>
+    </div>
+  </footer>
+  <script src="./js/externalJS/d3.min.js"></script>
+  <script src="./js/externalJS/d3-queue.min.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>
