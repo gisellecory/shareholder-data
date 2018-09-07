@@ -97,7 +97,7 @@ function getData(search_term) {
 
   d3.queue()
     // Get the text parser CSV
-    .defer(d3.csv, "/data/sample_text_output.csv")
+    .defer(d3.csv, "data/sample_text_output.csv")
     .await(function(error, data) {
 
       // FOR EACH ROW IN CSV
